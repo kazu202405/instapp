@@ -4,11 +4,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { KeyboardShortcuts } from "@/components/layout/KeyboardShortcuts";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { LoginGate } from "@/components/layout/LoginGate";
 import { useSidebarCollapsed } from "@/components/layout/useSidebarCollapsed";
 import { cn } from "@/lib/utils";
 
 /**
  * アプリケーション全体のシェルコンポーネント
+ * - ログイン認証ゲートで保護
  * - デスクトップ: 左サイドバー + メインコンテンツ
  * - モバイル: メインコンテンツ + ボトムナビゲーション
  * - サイドバーの折りたたみ状態に応じてメインコンテンツのマージンを動的調整
@@ -17,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebarCollapsed();
 
   return (
-    <>
+    <LoginGate>
       {/* ルート変更時にスクロールトップへ */}
       <ScrollToTop />
 
@@ -41,6 +43,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* グローバルキーボードショートカット */}
       <KeyboardShortcuts />
-    </>
+    </LoginGate>
   );
 }

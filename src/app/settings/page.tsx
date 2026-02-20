@@ -18,6 +18,7 @@ import {
   FlaskConical,
   Film,
   FileText,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -29,6 +30,7 @@ import { useAnalysisStore } from "@/store/analysisStore";
 import { useABTestStore } from "@/store/abtestStore";
 import { useReelStore } from "@/store/reelStore";
 import { useProfileStore } from "@/store/profileStore";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import type { Genre } from "@/lib/types";
 import {
@@ -90,11 +92,14 @@ const STORE_KEYS = [
   "instagrowth-reels",
   "instagrowth-settings",
   "instagrowth-theme",
+  "instagrowth-auth",
 ] as const;
 
 export default function SettingsPage() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
+
+  const logout = useAuthStore((s) => s.logout);
 
   const defaultGenre = useSettingsStore((s) => s.defaultGenre);
   const defaultPostTime = useSettingsStore((s) => s.defaultPostTime);
@@ -262,11 +267,14 @@ export default function SettingsPage() {
                       {/* 選択時のグラデーションボーダー */}
                       {isSelected && (
                         <span
-                          className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                          className="pointer-events-none absolute inset-0 rounded-xl"
                           style={{
-                            background:
-                              "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #9333ea, #ec4899, #f97316) border-box",
-                            borderColor: "transparent",
+                            padding: '2px',
+                            background: 'linear-gradient(135deg, #9333ea, #ec4899, #f97316)',
+                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            WebkitMaskComposite: 'xor',
+                            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            maskComposite: 'exclude',
                           }}
                           aria-hidden="true"
                         />
@@ -450,6 +458,21 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* ログアウト */}
+          <Button
+            variant="outline"
+            onClick={logout}
+            className="w-full justify-start gap-3 border-border bg-card text-foreground hover:bg-muted/70 h-12"
+          >
+            <LogOut className="size-4 text-muted-foreground" aria-hidden="true" />
+            <div className="text-left">
+              <span className="block text-sm font-medium">ログアウト</span>
+              <span className="block text-[11px] text-muted-foreground">
+                ログイン画面に戻ります
+              </span>
+            </div>
+          </Button>
         </main>
       </div>
 
