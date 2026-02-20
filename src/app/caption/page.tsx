@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Sparkles, History, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
-import type { GeneratedCaption } from "@/lib/types";
+import type { GeneratedCaption, CaptionInput } from "@/lib/types";
 import { generateCaptionVariants } from "@/engine/caption/generator";
 import { useCaptionStore } from "@/store/captionStore";
 import { cn } from "@/lib/utils";
@@ -15,12 +15,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CaptionForm } from "@/components/caption/CaptionForm";
+import { CaptionForm, type GenerationMode } from "@/components/caption/CaptionForm";
 import { CaptionVariants } from "@/components/caption/CaptionVariants";
 import { InstagramPreview } from "@/components/caption/InstagramPreview";
 import { CharacterCounter } from "@/components/caption/CharacterCounter";
 import { CaptionHistory } from "@/components/caption/CaptionHistory";
 import { Confetti } from "@/components/effects/Confetti";
+
+// AI生成APIを呼び出す関数
+async function generateWithAI(input: CaptionInput): Promise<GeneratedCaption[]> {
+  const response = await fetch("/api/caption", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  const data = (await response.json()) as {
+    captions?: GeneratedCaption[];
+    error?: string;
+  };
+
+  if (!response.ok || data.error) {
+    throw new Error(data.error || "AI生成に失敗しました");
+  }
+
+  if (!data.captions || data.captions.length === 0) {
+    throw new Error("AIからの応答が空でした");
+  }
+
+  return data.captions;
+}
 
 export default function CaptionPage() {
   // 3つのバリエーション
@@ -35,7 +59,15 @@ export default function CaptionPage() {
   // 初回生成かどうかの判定用（生成前のキャプション数を記録）
   const captionsCountBeforeGenerate = useRef<number | null>(null);
 
+  // 現在の生成モードを追跡
+  const generationModeRef = useRef<GenerationMode>("template");
+
   const { captions, addCaption } = useCaptionStore();
+
+  // 生成モード変更ハンドラ
+  const handleModeChange = useCallback((mode: GenerationMode) => {
+    generationModeRef.current = mode;
+  }, []);
 
   // 3つのバリエーション生成完了時のハンドラ
   const handleGenerated = useCallback((generatedCaptions: GeneratedCaption[]) => {
@@ -70,15 +102,43 @@ export default function CaptionPage() {
   }, [captions.length]);
 
   // 再生成ハンドラ（前回と同じ入力で再度3つ生成）
-  const handleRegenerate = useCallback(() => {
+  const handleRegenerate = useCallback(async () => {
     if (variants.length === 0) return;
     const input = variants[0].input;
-    const newVariants = generateCaptionVariants(input, 3);
-    for (const caption of newVariants) {
-      addCaption(caption);
+    const currentMode = generationModeRef.current;
+
+    if (currentMode === "ai") {
+      // AI生成モードで再生成
+      try {
+        const newVariants = await generateWithAI(input);
+        for (const caption of newVariants) {
+          addCaption(caption);
+        }
+        setVariants(newVariants);
+        setSelectedCaption(null);
+        toast.success("AIが新しい3つのバリエーションを生成しました");
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "再生成に失敗しました";
+        toast.error(message);
+        // フォールバック: テンプレート生成
+        toast.info("テンプレート生成にフォールバックします...");
+        const newVariants = generateCaptionVariants(input, 3);
+        for (const caption of newVariants) {
+          addCaption(caption);
+        }
+        setVariants(newVariants);
+        setSelectedCaption(null);
+      }
+    } else {
+      // テンプレート生成モードで再生成
+      const newVariants = generateCaptionVariants(input, 3);
+      for (const caption of newVariants) {
+        addCaption(caption);
+      }
+      setVariants(newVariants);
+      setSelectedCaption(null);
     }
-    setVariants(newVariants);
-    setSelectedCaption(null);
   }, [variants, addCaption]);
 
   return (
@@ -127,6 +187,7 @@ export default function CaptionPage() {
                   <CaptionForm
                     onGenerated={handleGenerated}
                     onBeforeGenerate={handleBeforeGenerate}
+                    onModeChange={handleModeChange}
                   />
                 </Suspense>
               </CardContent>

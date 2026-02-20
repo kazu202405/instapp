@@ -11,6 +11,7 @@ import {
   Hash,
   HelpCircle,
   Zap,
+  Wand2,
 } from "lucide-react";
 import type {
   Genre,
@@ -35,6 +36,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// 生成モード型
+export type GenerationMode = "template" | "ai";
 
 // ジャンル表示名マップ
 const genreDisplayNames: Record<Genre, string> = {
@@ -116,13 +120,48 @@ const targetActionIcons: Record<TargetAction, React.ReactNode> = {
 interface CaptionFormProps {
   onGenerated: (captions: GeneratedCaption[]) => void;
   onBeforeGenerate?: () => void;
+  onModeChange?: (mode: GenerationMode) => void;
 }
 
-export function CaptionForm({ onGenerated, onBeforeGenerate }: CaptionFormProps) {
+// AI生成APIを呼び出す関数
+async function generateWithAI(input: CaptionInput): Promise<GeneratedCaption[]> {
+  const response = await fetch("/api/caption", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  const data = (await response.json()) as {
+    captions?: GeneratedCaption[];
+    error?: string;
+  };
+
+  if (!response.ok || data.error) {
+    throw new Error(data.error || "AI生成に失敗しました");
+  }
+
+  if (!data.captions || data.captions.length === 0) {
+    throw new Error("AIからの応答が空でした");
+  }
+
+  return data.captions;
+}
+
+export function CaptionForm({ onGenerated, onBeforeGenerate, onModeChange }: CaptionFormProps) {
   const { currentInput, setCurrentInput, addCaption } = useCaptionStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [keywordsText, setKeywordsText] = useState("");
+  const [generationMode, setGenerationMode] = useState<GenerationMode>("template");
   const searchParams = useSearchParams();
+
+  // モード変更時に親へ通知
+  const handleModeChange = useCallback(
+    (mode: GenerationMode) => {
+      setGenerationMode(mode);
+      onModeChange?.(mode);
+    },
+    [onModeChange]
+  );
 
   // カレンダーからのディープリンク: URLパラメータでフォームを自動入力
   const hasAppliedParams = useRef(false);
@@ -182,23 +221,175 @@ export function CaptionForm({ onGenerated, onBeforeGenerate }: CaptionFormProps)
       includeEmoji: currentInput.includeEmoji ?? true,
     };
 
-    // 生成処理に少し遅延を入れてUI体験を向上
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      if (generationMode === "ai") {
+        // AI生成モード: APIエンドポイントを呼び出す
+        const captions = await generateWithAI(input);
+        for (const caption of captions) {
+          addCaption(caption);
+        }
+        onGenerated(captions);
+        toast.success("AIが3つのバリエーションを生成しました");
+      } else {
+        // テンプレート生成モード: 既存のローカル生成を使用
+        // 生成処理に少し遅延を入れてUI体験を向上
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const captions = generateCaptionVariants(input, 3);
+        for (const caption of captions) {
+          addCaption(caption);
+        }
+        onGenerated(captions);
+        toast.success("3つのバリエーションを生成しました");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "生成に失敗しました";
+      toast.error(message);
 
-    // 3つのバリエーションを同時生成
-    const captions = generateCaptionVariants(input, 3);
-    // 全バリエーションを履歴に追加
-    for (const caption of captions) {
-      addCaption(caption);
+      // AI生成失敗時はテンプレート生成にフォールバック
+      if (generationMode === "ai") {
+        toast.info("テンプレート生成にフォールバックします...");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const captions = generateCaptionVariants(input, 3);
+        for (const caption of captions) {
+          addCaption(caption);
+        }
+        onGenerated(captions);
+        toast.success("テンプレートで3つのバリエーションを生成しました");
+      }
     }
-    onGenerated(captions);
-    toast.success("3つのバリエーションを生成しました");
 
     setIsGenerating(false);
-  }, [currentInput, keywordsText, isValid, addCaption, onGenerated, onBeforeGenerate]);
+  }, [
+    currentInput,
+    keywordsText,
+    isValid,
+    addCaption,
+    onGenerated,
+    onBeforeGenerate,
+    generationMode,
+  ]);
 
   return (
     <div className="space-y-6">
+      {/* 生成モード切替トグル */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-muted-foreground">
+          生成モード
+        </Label>
+        <div
+          className="grid grid-cols-2 gap-2"
+          role="radiogroup"
+          aria-label="生成モードを選択"
+        >
+          {/* テンプレートモード */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={generationMode === "template"}
+            aria-label="テンプレート生成: ローカルで高速にキャプションを生成"
+            onClick={() => handleModeChange("template")}
+            className={cn(
+              "relative flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
+              "border bg-card/80 dark:bg-zinc-900/50 hover:bg-muted/70",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50",
+              generationMode === "template"
+                ? "border-transparent bg-muted/80 shadow-lg shadow-purple-900/20"
+                : "border-border/50 hover:border-border"
+            )}
+          >
+            {/* 選択時のグラデーションボーダー */}
+            {generationMode === "template" && (
+              <span
+                className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                style={{
+                  background:
+                    "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #9333ea, #ec4899, #f97316) border-box",
+                  borderColor: "transparent",
+                }}
+                aria-hidden="true"
+              />
+            )}
+            <Sparkles
+              className={cn(
+                "size-4",
+                generationMode === "template"
+                  ? "text-purple-400"
+                  : "text-muted-foreground"
+              )}
+              aria-hidden="true"
+            />
+            <span
+              className={cn(
+                generationMode === "template"
+                  ? "bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                  : "text-muted-foreground"
+              )}
+            >
+              テンプレート
+            </span>
+          </button>
+
+          {/* AI生成モード */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={generationMode === "ai"}
+            aria-label="AI生成: GPTを使用して高品質なキャプションを生成"
+            onClick={() => handleModeChange("ai")}
+            className={cn(
+              "relative flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
+              "border bg-card/80 dark:bg-zinc-900/50 hover:bg-muted/70",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50",
+              generationMode === "ai"
+                ? "border-transparent bg-muted/80 shadow-lg shadow-purple-900/20"
+                : "border-border/50 hover:border-border"
+            )}
+          >
+            {/* 選択時のグラデーションボーダー */}
+            {generationMode === "ai" && (
+              <span
+                className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                style={{
+                  background:
+                    "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6) border-box",
+                  borderColor: "transparent",
+                }}
+                aria-hidden="true"
+              />
+            )}
+            <Wand2
+              className={cn(
+                "size-4",
+                generationMode === "ai"
+                  ? "text-emerald-400"
+                  : "text-muted-foreground"
+              )}
+              aria-hidden="true"
+            />
+            <span
+              className={cn(
+                generationMode === "ai"
+                  ? "bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent"
+                  : "text-muted-foreground"
+              )}
+            >
+              AI生成
+            </span>
+            {/* GPTバッジ */}
+            <span
+              className={cn(
+                "ml-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide text-white",
+                "bg-gradient-to-r from-emerald-500 to-cyan-500"
+              )}
+              aria-hidden="true"
+            >
+              GPT
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* ジャンル選択 */}
       <div className="space-y-2">
         <Label htmlFor="genre" className="text-sm font-medium text-muted-foreground">
@@ -395,8 +586,9 @@ export function CaptionForm({ onGenerated, onBeforeGenerate }: CaptionFormProps)
         disabled={!isValid || isGenerating}
         className={cn(
           "w-full h-12 rounded-xl text-base font-bold tracking-wide transition-all duration-300",
-          "bg-gradient-to-r from-purple-600 to-pink-600",
-          "hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-900/30",
+          generationMode === "ai"
+            ? "bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 hover:shadow-lg hover:shadow-emerald-900/30"
+            : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-900/30",
           "active:scale-[0.98]",
           "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
         )}
@@ -413,7 +605,9 @@ export function CaptionForm({ onGenerated, onBeforeGenerate }: CaptionFormProps)
               transition={{ duration: 0.2 }}
             >
               <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-              3つのバリエーションを生成中...
+              {generationMode === "ai"
+                ? "GPTが生成中..."
+                : "3つのバリエーションを生成中..."}
             </motion.span>
           ) : (
             <motion.span
@@ -424,8 +618,14 @@ export function CaptionForm({ onGenerated, onBeforeGenerate }: CaptionFormProps)
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Sparkles className="size-5" aria-hidden="true" />
-              生成する (3案)
+              {generationMode === "ai" ? (
+                <Wand2 className="size-5" aria-hidden="true" />
+              ) : (
+                <Sparkles className="size-5" aria-hidden="true" />
+              )}
+              {generationMode === "ai"
+                ? "AIで生成する (3案)"
+                : "生成する (3案)"}
             </motion.span>
           )}
         </AnimatePresence>
