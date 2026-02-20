@@ -7,7 +7,7 @@ interface AuthStore {
   logout: () => void;
 }
 
-const CORRECT_PASSWORD = "いんすた";
+const CORRECT_PASSWORD = "123456";
 
 export const useAuthStore = create<AuthStore>()(
   persist(
