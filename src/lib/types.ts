@@ -71,6 +71,7 @@ export interface GeneratedCaption {
   hashtags: string[]; // ハッシュタグ
   hookReason: string; // フック選択の行動科学的理由
   ctaReason: string; // CTA選択の理由
+  imagePrompt?: string; // 投稿画像生成用プロンプト（GPT/SORA用）
   storyStructure: StoryStructure;
   input: CaptionInput;
   createdAt: string; // ISO date string

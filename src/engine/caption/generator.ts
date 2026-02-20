@@ -82,7 +82,10 @@ export function generateCaption(input: CaptionInput): GeneratedCaption {
   const hookReason = generateHookReason(hookType, hookResult.reason);
   const ctaReason = ctaResult.reason;
 
-  // 11. 一意ID生成
+  // 11. 画像生成プロンプト
+  const imagePrompt = generateImagePrompt(input, finalHook, structure.structure);
+
+  // 12. 一意ID生成
   const id = generateId();
 
   return {
@@ -95,6 +98,7 @@ export function generateCaption(input: CaptionInput): GeneratedCaption {
     hashtags: hashtagResult.hashtags,
     hookReason,
     ctaReason,
+    imagePrompt,
     storyStructure: structure.structure,
     input,
     createdAt: new Date().toISOString(),
@@ -407,6 +411,78 @@ function genreToJapanese(genre: Genre): string {
     photography: '写真',
   };
   return map[genre] ?? genre;
+}
+
+// ============================================================
+// 画像プロンプト生成
+// ============================================================
+
+// ジャンル別のビジュアルスタイル
+const genreVisualStyles: Record<Genre, string> = {
+  fitness: 'athletic lifestyle, energetic pose, gym or outdoor workout setting, dynamic composition, warm golden lighting, sweat detail',
+  food: 'professional food photography, appetizing presentation, overhead or 45-degree angle, natural soft lighting, rustic wood or marble surface, garnish details',
+  travel: 'breathtaking landscape or iconic landmark, golden hour lighting, wide angle composition, vibrant colors, wanderlust atmosphere, travel lifestyle',
+  beauty: 'clean beauty aesthetic, soft diffused lighting, close-up product or skincare routine, dewy skin texture, pastel or neutral tones, minimalist background',
+  business: 'professional workspace, modern office or coffee shop setting, laptop and notebook, clean minimal aesthetic, confident mood, muted sophisticated tones',
+  lifestyle: 'candid lifestyle moment, cozy or aspirational setting, warm natural lighting, authentic and relatable, soft bokeh background, earth tones',
+  tech: 'sleek tech product, futuristic clean background, neon or cool blue accent lighting, minimal composition, sharp focus, modern aesthetic',
+  education: 'knowledge and learning aesthetic, open book or notebook, organized desk setup, warm inviting tones, infographic style elements, clean typography space',
+  fashion: 'editorial fashion photography, stylish outfit details, urban or studio backdrop, dramatic lighting, confident pose, trendy color palette',
+  photography: 'stunning visual composition, dramatic lighting, rule of thirds, vivid colors or moody black and white, cinematic depth of field, artistic perspective',
+};
+
+// フックタイプ別のムード
+const hookMoodStyles: Record<HookType, string> = {
+  curiosity: 'mysterious and intriguing atmosphere, partial reveal, shadow play, creates sense of wonder',
+  controversy: 'bold and striking contrast, provocative composition, unexpected juxtaposition, attention-grabbing',
+  story: 'narrative and emotional, storytelling moment, cinematic feel, before-and-after or journey progression',
+  number: 'clean data visualization aesthetic, organized layout, infographic-friendly, structured and clear',
+  question: 'thought-provoking composition, contemplative mood, open space for text overlay, engaging eye contact',
+  shock: 'dramatic and surprising, high contrast, unexpected angle, jaw-dropping visual impact',
+};
+
+// ストーリー構造別の補足スタイル
+const structureStyles: Record<StoryStructure, string> = {
+  education: 'step-by-step visual guide, numbered or listed layout, tutorial aesthetic',
+  narrative: 'cinematic storytelling, emotional journey, before-and-after transformation',
+  empathy: 'relatable and authentic, warm and comforting, close personal moment',
+  authority: 'professional and credible, data or expert aesthetic, clean and authoritative',
+  lossAversion: 'urgency and scarcity feel, dramatic lighting, sense of missing out',
+};
+
+/**
+ * 投稿画像生成用のプロンプトを生成する
+ * GPTやSORAにコピペして使えるプロンプト
+ */
+function generateImagePrompt(
+  input: CaptionInput,
+  hookText: string,
+  storyStructure: StoryStructure,
+): string {
+  const genreStyle = genreVisualStyles[input.genre];
+  const mood = hookMoodStyles[input.hookType];
+  const structure = structureStyles[storyStructure];
+  const genreName = genreToJapanese(input.genre);
+  const keywordsStr = input.keywords.length > 0 ? input.keywords.join(', ') : input.theme;
+
+  // 絵文字を除去したフックテキスト（英語プロンプト内の参考用）
+  const cleanHook = hookText.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}#️⃣]/gu, '').trim();
+
+  return `Instagram投稿用の画像を作成してください。
+
+【テーマ】${input.theme}
+【ジャンル】${genreName}
+【キーワード】${keywordsStr}
+【投稿の冒頭】${cleanHook}
+
+【画像の指示】
+- スタイル: ${genreStyle}
+- ムード: ${mood}
+- 構成: ${structure}
+- アスペクト比: 1:1（Instagram正方形フィード用）
+- テキストは画像に含めない（キャプションは別途記載するため）
+- Instagram映えする高品質なビジュアル
+- スクロールを止める目を引く構図${input.includeEmoji ? '\n- 明るくポップな雰囲気' : '\n- 洗練されたプロフェッショナルな雰囲気'}`;
 }
 
 // ============================================================

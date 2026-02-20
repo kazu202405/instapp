@@ -12,6 +12,7 @@ import {
   Gift,
   MousePointerClick,
   CheckCircle2,
+  ImageIcon,
 } from "lucide-react";
 import type { GeneratedCaption } from "@/lib/types";
 import { cn, copyToClipboard } from "@/lib/utils";
@@ -98,7 +99,9 @@ export function CaptionVariants({
 }: CaptionVariantsProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedImagePromptId, setCopiedImagePromptId] = useState<string | null>(null);
   const [reasonExpanded, setReasonExpanded] = useState(false);
+  const [imagePromptExpanded, setImagePromptExpanded] = useState(false);
 
   // クリップボードにコピー
   const handleCopy = useCallback(
@@ -107,6 +110,19 @@ export function CaptionVariants({
       if (success) {
         setCopiedId(caption.id);
         setTimeout(() => setCopiedId(null), 2000);
+      }
+    },
+    []
+  );
+
+  // 画像プロンプトをコピー
+  const handleCopyImagePrompt = useCallback(
+    async (caption: GeneratedCaption) => {
+      if (!caption.imagePrompt) return;
+      const success = await copyToClipboard(caption.imagePrompt);
+      if (success) {
+        setCopiedImagePromptId(caption.id);
+        setTimeout(() => setCopiedImagePromptId(null), 2000);
       }
     },
     []
@@ -156,6 +172,7 @@ export function CaptionVariants({
                   onClick={() => {
                     setActiveTab(index);
                     setReasonExpanded(false);
+                    setImagePromptExpanded(false);
                   }}
                   className={cn(
                     "relative flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-all duration-200",
@@ -312,6 +329,91 @@ export function CaptionVariants({
             </div>
 
             <Separator className="bg-border/50" />
+
+            {/* 画像生成プロンプト（アコーディオン） */}
+            {activeCaption.imagePrompt && (
+              <div className="rounded-lg border border-border/40 bg-muted/30 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setImagePromptExpanded(!imagePromptExpanded)}
+                  className={cn(
+                    "flex w-full items-center justify-between px-4 py-3 text-left transition-colors",
+                    "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-inset"
+                  )}
+                  aria-expanded={imagePromptExpanded}
+                  aria-controls={`image-prompt-${activeTab}`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <ImageIcon
+                      className="size-4 text-cyan-400"
+                      aria-hidden="true"
+                    />
+                    画像生成プロンプト
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 text-muted-foreground transition-transform duration-200",
+                      imagePromptExpanded && "rotate-180"
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {imagePromptExpanded && (
+                    <motion.div
+                      id={`image-prompt-${activeTab}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                      role="region"
+                      aria-label="画像生成プロンプト"
+                    >
+                      <div className="px-4 pb-4 space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                          GPTアプリやSORAにコピペして画像を生成できます
+                        </p>
+                        <div className="rounded-md bg-background/80 border border-border/50 p-3">
+                          <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                            {activeCaption.imagePrompt}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCopyImagePrompt(activeCaption)}
+                          className={cn(
+                            "w-full gap-1.5 border-border transition-all duration-200",
+                            copiedImagePromptId === activeCaption.id
+                              ? "bg-cyan-900/50 border-cyan-600/50 text-cyan-300"
+                              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                          aria-label={
+                            copiedImagePromptId === activeCaption.id
+                              ? "プロンプトをコピーしました"
+                              : "画像プロンプトをコピー"
+                          }
+                        >
+                          {copiedImagePromptId === activeCaption.id ? (
+                            <>
+                              <Check className="size-3.5" aria-hidden="true" />
+                              コピー済み
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="size-3.5" aria-hidden="true" />
+                              プロンプトをコピー
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* 行動科学的理由（アコーディオン） */}
             <div className="rounded-lg border border-border/40 bg-muted/30 overflow-hidden">

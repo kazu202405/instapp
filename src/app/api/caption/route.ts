@@ -139,7 +139,8 @@ ${input.includeEmoji ? "- 絵文字を効果的に使用してください" : "-
       "hashtags": ["#タグ1", "#タグ2", "..."],
       "hookReason": "このフックが効果的な行動科学的理由",
       "ctaReason": "このCTAが${actionName}を促す行動科学的理由",
-      "storyStructure": "education|narrative|empathy|authority|lossAversion"
+      "storyStructure": "education|narrative|empathy|authority|lossAversion",
+      "imagePrompt": "この投稿に合うInstagram画像を生成するための詳細な日本語プロンプト（テーマ、構図、雰囲気、色合い、スタイルを具体的に指示）"
     }
   ]
 }
@@ -181,6 +182,7 @@ interface GptVariant {
   hookReason: string;
   ctaReason: string;
   storyStructure: string;
+  imagePrompt?: string;
 }
 
 // GPTレスポンスのパースと変換
@@ -235,6 +237,7 @@ function parseGptResponse(
       hashtags: variant.hashtags,
       hookReason: variant.hookReason,
       ctaReason: variant.ctaReason,
+      imagePrompt: variant.imagePrompt || undefined,
       storyStructure: structure,
       input,
       createdAt: new Date().toISOString(),
