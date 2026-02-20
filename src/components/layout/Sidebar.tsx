@@ -13,6 +13,7 @@ import {
   ChevronRight,
   FileText,
   Film,
+  MessageCircle,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const navItems = [
   { label: "投稿分析", href: "/analyzer", icon: BarChart3 },
   { label: "プロフィール", href: "/profile", icon: UserCircle },
   { label: "A/Bテスト", href: "/abtest", icon: FlaskConical },
+  { label: "AIコンサル", href: "/consult", icon: MessageCircle },
   { label: "設定", href: "/settings", icon: Settings },
 ];
 

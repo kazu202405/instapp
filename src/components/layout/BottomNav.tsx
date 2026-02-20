@@ -12,6 +12,7 @@ import {
   Film,
   UserCircle,
   FlaskConical,
+  MessageCircle,
   MoreHorizontal,
   Settings,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const moreNavItems = [
   { label: "リール台本", href: "/reel", icon: Film },
   { label: "プロフィール", href: "/profile", icon: UserCircle },
   { label: "A/Bテスト", href: "/abtest", icon: FlaskConical },
+  { label: "AIコンサル", href: "/consult", icon: MessageCircle },
   { label: "設定", href: "/settings", icon: Settings },
 ];
 
