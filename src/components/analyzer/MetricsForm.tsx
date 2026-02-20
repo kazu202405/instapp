@@ -96,7 +96,7 @@ export function MetricsForm() {
     Number(form.reach) > 0;
 
   return (
-    <Card className="border-white/5 bg-white/[0.03]">
+    <Card className="border-border/50 bg-card/80 dark:bg-zinc-900/40 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-lg">投稿メトリクスを入力</CardTitle>
       </CardHeader>
@@ -112,7 +112,7 @@ export function MetricsForm() {
               placeholder="例: 5000"
               value={form.followerCount}
               onChange={(e) => handleChange("followerCount", e.target.value)}
-              className="bg-white/5 border-white/10"
+              className="bg-card/80 dark:bg-zinc-900/50 border-border/50"
             />
           </div>
 
@@ -124,10 +124,10 @@ export function MetricsForm() {
                 value={form.postFormat}
                 onValueChange={(v) => handleChange("postFormat", v)}
               >
-                <SelectTrigger className="w-full bg-white/5 border-white/10">
+                <SelectTrigger className="w-full bg-card/80 dark:bg-zinc-900/50 border-border/50">
                   <SelectValue placeholder="選択してください" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {FORMAT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -143,10 +143,10 @@ export function MetricsForm() {
                 value={form.contentPillar}
                 onValueChange={(v) => handleChange("contentPillar", v)}
               >
-                <SelectTrigger className="w-full bg-white/5 border-white/10">
+                <SelectTrigger className="w-full bg-card/80 dark:bg-zinc-900/50 border-border/50">
                   <SelectValue placeholder="選択してください" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {PILLAR_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -164,13 +164,13 @@ export function MetricsForm() {
             </Label>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {[
-                { key: "reach", label: "リーチ", placeholder: "例: 10000" },
-                { key: "impressions", label: "インプレッション", placeholder: "例: 15000" },
-                { key: "likes", label: "いいね", placeholder: "例: 500" },
-                { key: "comments", label: "コメント", placeholder: "例: 30" },
-                { key: "saves", label: "保存", placeholder: "例: 100" },
-                { key: "shares", label: "シェア", placeholder: "例: 20" },
-                { key: "follows", label: "フォロー増", placeholder: "例: 15" },
+                { key: "reach", label: "リーチ", placeholder: "10000" },
+                { key: "impressions", label: "インプレッション", placeholder: "15000" },
+                { key: "likes", label: "いいね", placeholder: "500" },
+                { key: "comments", label: "コメント", placeholder: "30" },
+                { key: "saves", label: "保存", placeholder: "100" },
+                { key: "shares", label: "シェア", placeholder: "20" },
+                { key: "follows", label: "フォロー増", placeholder: "15" },
               ].map((field) => (
                 <div key={field.key} className="space-y-1.5">
                   <Label htmlFor={field.key} className="text-xs">
@@ -183,7 +183,7 @@ export function MetricsForm() {
                     placeholder={field.placeholder}
                     value={form[field.key as keyof typeof form]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
-                    className="bg-white/5 border-white/10 h-9 text-sm"
+                    className="bg-card/80 dark:bg-zinc-900/50 border-border/50 h-10 text-sm"
                   />
                 </div>
               ))}
@@ -198,7 +198,7 @@ export function MetricsForm() {
               type="date"
               value={form.date}
               onChange={(e) => handleChange("date", e.target.value)}
-              className="bg-white/5 border-white/10 w-full sm:w-auto"
+              className="bg-card/80 dark:bg-zinc-900/50 border-border/50 w-full sm:w-auto"
             />
           </div>
 

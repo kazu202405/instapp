@@ -301,11 +301,14 @@ export function CaptionForm({ onGenerated, onBeforeGenerate, onModeChange }: Cap
             {/* 選択時のグラデーションボーダー */}
             {generationMode === "template" && (
               <span
-                className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                className="pointer-events-none absolute inset-0 rounded-xl"
                 style={{
-                  background:
-                    "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #9333ea, #ec4899, #f97316) border-box",
-                  borderColor: "transparent",
+                  padding: '2px',
+                  background: 'linear-gradient(135deg, #9333ea, #ec4899, #f97316)',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  maskComposite: 'exclude',
                 }}
                 aria-hidden="true"
               />
@@ -349,11 +352,14 @@ export function CaptionForm({ onGenerated, onBeforeGenerate, onModeChange }: Cap
             {/* 選択時のグラデーションボーダー */}
             {generationMode === "ai" && (
               <span
-                className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                className="pointer-events-none absolute inset-0 rounded-xl"
                 style={{
-                  background:
-                    "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6) border-box",
-                  borderColor: "transparent",
+                  padding: '2px',
+                  background: 'linear-gradient(135deg, #10b981, #06b6d4, #3b82f6)',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  maskComposite: 'exclude',
                 }}
                 aria-hidden="true"
               />
@@ -530,11 +536,14 @@ export function CaptionForm({ onGenerated, onBeforeGenerate, onModeChange }: Cap
                 {/* 選択時のグラデーションボーダー */}
                 {isSelected && (
                   <span
-                    className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
+                    className="pointer-events-none absolute inset-0 rounded-xl"
                     style={{
-                      background:
-                        "linear-gradient(var(--color-card), var(--color-card)) padding-box, linear-gradient(135deg, #9333ea, #ec4899, #f97316) border-box",
-                      borderColor: "transparent",
+                      padding: '2px',
+                      background: 'linear-gradient(135deg, #9333ea, #ec4899, #f97316)',
+                      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                      WebkitMaskComposite: 'xor',
+                      mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                      maskComposite: 'exclude',
                     }}
                     aria-hidden="true"
                   />

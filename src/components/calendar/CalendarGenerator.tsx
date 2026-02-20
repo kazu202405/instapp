@@ -77,7 +77,7 @@ export function CalendarGenerator() {
   const isValid = genre !== "";
 
   return (
-    <Card className="border-white/5 bg-white/[0.03]">
+    <Card className="border-border/50 bg-card/80 dark:bg-zinc-900/40 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarPlus className="h-4 w-4 text-pink-400" />
@@ -90,10 +90,10 @@ export function CalendarGenerator() {
           <div className="space-y-2">
             <Label>ジャンル</Label>
             <Select value={genre} onValueChange={setGenre}>
-              <SelectTrigger className="w-full bg-white/5 border-white/10">
+              <SelectTrigger className="w-full bg-card/80 dark:bg-zinc-900/50 border-border/50">
                 <SelectValue placeholder="ジャンルを選択" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border">
                 {GENRE_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -107,7 +107,7 @@ export function CalendarGenerator() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>週の投稿数</Label>
-              <span className="rounded-md bg-white/10 px-2.5 py-0.5 text-sm font-bold tabular-nums">
+              <span className="rounded-md bg-muted px-2.5 py-0.5 text-sm font-bold tabular-nums">
                 {postsPerWeek}回/週
               </span>
             </div>
@@ -138,27 +138,27 @@ export function CalendarGenerator() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-white/5 border-white/10"
+              className="bg-card/80 dark:bg-zinc-900/50 border-border/50"
             />
           </div>
 
           {/* 生成ボタン */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="flex flex-col gap-2 pt-1">
             <Button
               onClick={handleGenerateWeekly}
               disabled={!isValid}
-              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity border-0"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity border-0"
             >
-              <Zap className="mr-1.5 h-4 w-4" />
+              <Zap className="mr-1.5 h-4 w-4 shrink-0" />
               週間プラン生成
             </Button>
             <Button
               onClick={handleGenerateMonthly}
               disabled={!isValid}
               variant="outline"
-              className="border-white/10 hover:bg-white/5"
+              className="w-full border-border/50 hover:bg-muted/60"
             >
-              <CalendarPlus className="mr-1.5 h-4 w-4" />
+              <CalendarPlus className="mr-1.5 h-4 w-4 shrink-0" />
               月間プラン生成
             </Button>
           </div>
